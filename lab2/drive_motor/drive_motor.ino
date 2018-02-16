@@ -20,7 +20,7 @@ void loop() {
   digitalWrite(PIN_MOTOR_LEFT_2, LOW);
   delay(1000);
   digitalWrite(PIN_LED1, LOW);
-  digitalWrite(PIN_LED1, LOW);
+  digitalWrite(PIN_MOTOR_LEFT_1, LOW);
   delay(1000);
 }
 
