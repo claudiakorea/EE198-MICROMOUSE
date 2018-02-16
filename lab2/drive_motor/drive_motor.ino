@@ -16,11 +16,19 @@ void setup() {
 
 void loop() {
   digitalWrite(PIN_LED1, HIGH);
-  digitalWrite(PIN_MOTOR_LEFT_1, HIGH);
-  digitalWrite(PIN_MOTOR_LEFT_2, LOW);
+  digitalWrite(PIN_LED2, LOW);
+  analogWrite(PIN_MOTOR_LEFT_1, 64);
+  analogWrite(PIN_MOTOR_LEFT_2, 0);
   delay(1000);
   digitalWrite(PIN_LED1, LOW);
-  digitalWrite(PIN_MOTOR_LEFT_2, HIGH);
+  digitalWrite(PIN_LED2, HIGH);
+  analogWrite(PIN_MOTOR_LEFT_1, 0);
+  analogWrite(PIN_MOTOR_LEFT_2, 64);
+  delay(1000);
+  analogWrite(PIN_LED1, HIGH);
+  analogWrite(PIN_LED2, HIGH);
+  analogWrite(PIN_MOTOR_LEFT_1, 64);
+  analogWrite(PIN_MOTOR_LEFT_2, 64);
   delay(1000);
 }
 
