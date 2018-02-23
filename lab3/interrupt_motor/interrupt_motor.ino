@@ -4,8 +4,8 @@
 #define PIN_ENCODER_LEFT_B 2
 
 int left_position = 0;
-float left_velocity = 0;
-float last_time = micros();
+double left_velocity = 0;
+long last_time = micros();
 
 bool prevLeftEncoderVal = 0;
 
@@ -21,12 +21,15 @@ void setup() {
 }
 
 void loop() {
-
   digitalWrite(PIN_LED1, HIGH);
   delay(200);
   digitalWrite(PIN_LED1, LOW);
   delay(200);
-  Serial.println(left_velocity);
+  Serial.print("Velocity: ");
+  Serial.print(left_velocity);
+  Serial.print(" time: ");
+  Serial.print(micros());
+  Serial.print("\n");
 }
 
 void leftEncoderRisingEdge()
@@ -36,7 +39,7 @@ void leftEncoderRisingEdge()
   } else {
     left_position -= 1;
   }
-  float new_time = micros();
-  left_velocity = 1/(new_time - last_time);
+  long new_time = micros();
+  left_velocity = 1000000.0/(new_time - last_time);
   last_time = new_time;
 }
