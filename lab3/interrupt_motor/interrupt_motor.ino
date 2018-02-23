@@ -26,7 +26,7 @@ void loop() {
   delay(200);
   digitalWrite(PIN_LED1, LOW);
   delay(200);
-  Serial.println(left_position);
+  Serial.println(left_velocity);
 }
 
 void leftEncoderRisingEdge()
