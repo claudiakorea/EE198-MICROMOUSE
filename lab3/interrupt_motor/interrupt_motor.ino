@@ -21,15 +21,7 @@ void setup() {
 }
 
 void loop() {
-  digitalWrite(PIN_LED1, HIGH);
-  delay(200);
-  digitalWrite(PIN_LED1, LOW);
-  delay(200);
-  Serial.print("Velocity: ");
-  Serial.print(left_velocity);
-  Serial.print(" time: ");
-  Serial.print(micros());
-  Serial.print("\n");
+  Serial.println(left_velocity);
 }
 
 void leftEncoderRisingEdge()
