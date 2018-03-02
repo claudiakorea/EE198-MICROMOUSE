@@ -2,6 +2,10 @@
 #define PIN_ENCODER_LEFT_B 2
 #define PIN_ENCODER_RIGHT_A 12
 #define PIN_ENCODER_RIGHT_B 3
+#define PIN_MOTOR_LEFT_1 9
+#define PIN_MOTOR_LEFT_2 10
+#define PIN_MOTOR_RIGHT_1 6
+#define PIN_MOTOR_RIGHT_2 5
 
 // Mouse physical parameters
 const float ENCODER_TICKS_PER_REVOLUTION = 420.0 / 2.0; // blaze it
@@ -32,6 +36,11 @@ void setup() {
   pinMode(PIN_ENCODER_LEFT_B, INPUT);
   pinMode(PIN_ENCODER_RIGHT_A, INPUT);
   pinMode(PIN_ENCODER_RIGHT_B, INPUT);
+  pinMode(PIN_ENCODER_LEFT_A, INPUT);
+  pinMode(PIN_MOTOR_LEFT_1, OUTPUT);
+  pinMode(PIN_MOTOR_LEFT_2, OUTPUT);
+  pinMode(PIN_MOTOR_RIGHT_1, OUTPUT);
+  pinMode(PIN_MOTOR_RIGHT_2, OUTPUT);
   attachInterrupt(digitalPinToInterrupt(PIN_ENCODER_LEFT_B), leftEncoderRisingEdge, RISING);
   attachInterrupt(digitalPinToInterrupt(PIN_ENCODER_RIGHT_B), rightEncoderRisingEdge, RISING);
 }
@@ -40,8 +49,13 @@ void loop() {
   checkEncodersZeroVelocity();
 
   velocity_forward = (velocity_left + velocity_right) / 2;
-  velocity_turn = /* YOUR CODE HERE *;
+  velocity_turn = (velocity_right - velocity_left) / WHEELBASE_DIAMETER;
 
+  analogWrite(PIN_MOTOR_LEFT_1, 0);
+  analogWrite(PIN_MOTOR_LEFT_2, 0);
+  analogWrite(PIN_MOTOR_RIGHT_1, 0);
+  analogWrite(PIN_MOTOR_RIGHT_2, 0);
+  
   if (count % 1000 == 0) {
     // Print debug info every 1000 loops
     Serial.print(velocity_turn);
@@ -69,7 +83,7 @@ void checkEncodersZeroVelocity(void) {
 
 void leftEncoderRisingEdge(void) {
   unsigned long curr_time = micros();
-
+  //Serial.print("Anant");
   int direction;
   if (digitalRead(PIN_ENCODER_LEFT_A) == HIGH) {
     direction = 1;
@@ -90,7 +104,7 @@ void leftEncoderRisingEdge(void) {
 
 void rightEncoderRisingEdge(void) {
   unsigned long curr_time = micros();
-
+  //Serial.print("Sahai");
   int direction;
   if (digitalRead(PIN_ENCODER_RIGHT_A) == HIGH) {
     direction = -1;
