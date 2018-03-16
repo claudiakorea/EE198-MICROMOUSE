@@ -27,19 +27,19 @@ double velocity_linear_power;
 double velocity_angular_power;
 
 // Angular and Linear setpoints
-double velocity_linear_setpoint = 20;
+double velocity_linear_setpoint = 400;
 double velocity_angular_setpoint = 0;
 
 // DiFfErENTtiAL EQuatIoNs
-double kp_angular = 0.004;
-double kp_linear = 0.01;
+double kp_angular = 0.4;
+double kp_linear = 0.004;
 
 // Integral
 double ki_angular = 0.05;
 double ki_linear = 0.0005;
 
 // Derivative
-double kd = 0;
+double kd = 0.00005;
 
 // controllers
 PID pid_linear(&velocity_linear, &velocity_linear_power, &velocity_linear_setpoint, kp_linear, ki_linear, kd, DIRECT);

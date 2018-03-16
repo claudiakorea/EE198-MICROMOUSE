@@ -152,8 +152,7 @@ void leftEncoderRisingEdge(void) {
     velocity_left = 0;
   } else {
     // Otherwise, convert the period of our pulse in mm/second
-    velocity_left = direction * VELOCITY_COEFF / (curr_time - prev_pulse_time_left);
-  }
+    velocity_left = direction * VELOCITY_COEFF *  0.9/ (curr_time - prev_pulse_time_left);  }
 
   prev_pulse_time_left = curr_time;
 }
