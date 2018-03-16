@@ -2,6 +2,7 @@
 
 #include <VL6180X.h>
 #include <Wire.h>
+#include <PID_v1.h>
 
 // Invert encoder directions if needed
 const boolean INVERT_ENCODER_LEFT = true;
