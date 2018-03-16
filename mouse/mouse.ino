@@ -21,13 +21,43 @@ float left_dist;
 float right_dist;
 float center_dist;
 
-//DiFfErENTtiAL EQuatIoNs
-float kp = 0.5;
-float k_lin = 0.01;
+// Power variables to apply
+float velocity_linear_power;
+float velocity_angular_power;
+
+// Angular and Linear setpoints
+double velocity_linear_setpoint = 20;
+double velocity_angular_setpoint = 0;
+
+// DiFfErENTtiAL EQuatIoNs
+float kp_angular = 0.004;
+float kp_linear = 0.01;
+
+// Integral
+float ki_angular = 0.05;
+float ki_linear = 0.0005;
+
+// Derivative
+float kd = 0;
+
+// controllers
+PID pid_linear(&velocity_linear, &velocity_linear_power, &velocity_linear_setpoint, kp_linear, ki_linear, kd);
+PID pid_angular(&velocity_angular, &velocity_angular_power, &velocity_angular_setpoint, kp_angular, ki_angular, kd);
+
 
 void setup() {
   Serial.begin(9600);
   hardwareSetup();
+  // velocity_linear = 0;
+  
+  pid_linear.SetOutputLimits(-1.0, 1.0); // 
+  pid_angular.SetOutputLimits(-1.0, 1.0); // nani?!?!?
+  pid_linear.SetSampleTime(10); // Run control loop at 100Hz (10ms period)
+  pid_angular.SetSampleTime(10);
+
+  // Turn the PID loop on
+  pid_linear.SetMode(AUTOMATIC);
+  pid_angular.SetMode(AUTOMATIC);
 }
 
 void loop() {
@@ -43,17 +73,22 @@ void loop() {
   // Your changes should start here //
   ////////////////////////////////////
 
-  float left_power = 0.2;
-  float right_power = 0.2;
+  pid_linear.Compute();
+  pid_angular.Compute();
 
-  float ang_error = -1 * velocity_angular;
-  float ang_u = ang_error * kp;
+  // float left_power = 0.2;
+  // float right_power = 0.2;
 
-  float lin_error = 500 - velocity_linear;
-  float lin_u = lin_error * k_lin;
+  // float ang_error = -1 * velocity_angular;
+  // float ang_u = ang_error * kp;
 
-  applyPowerLeft(lin_u - ang_u);
-  applyPowerRight(lin_u + ang_u);
+  // float lin_error = 500 - velocity_linear;
+  // float lin_u = lin_error * k_lin;
+
+  // applyPowerLeft(lin_u - ang_u);
+  // applyPowerRight(lin_u + ang_u);
+  applyPowerLeft(velocity_linear_power - velocity_angular_power);
+  applyPowerRight(velocity_linear_power + velocity_angular_power);
 
   // Print debug info every 500 loops
   if (count % 500 == 0) {
