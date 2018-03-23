@@ -18,7 +18,7 @@ int count = 0;
 // Sensor states
 double velocity_angular = 0;
 double velocity_linear = 0;
-float left_dist;
+double left_dist;
 float right_dist;
 float center_dist;
 
@@ -36,20 +36,23 @@ double dist_wall_setpoint = 50;
 // DiFfErENTtiAL EQuatIoNs
 double kp_angular = 0.4;
 double kp_linear = 0.004;
+double kp_anant = 0.4;
 
 // Integral
 double ki_angular = 0.05;
 double ki_linear = 0.0005;
+double ki_sahai = 0.08;
 
 // Derivative
 double kd = 0.00005;
+double kd_sanant = 0.0000000001;
 
 // straight line controllers
 PID pid_linear(&velocity_linear, &velocity_linear_power, &velocity_linear_setpoint, kp_linear, ki_linear, kd, DIRECT);
 PID pid_angular(&velocity_angular, &velocity_angular_power, &velocity_angular_setpoint, kp_angular, ki_angular, kd, DIRECT);
 
 // wall following controllers
-PID pid_dist_wall(&left_dist, &, &dist_wall_setpoint DIRECT);
+PID pid_dist_wall(&left_dist, &velocity_angular_power, &dist_wall_setpoint, kp_anant, ki_sahai, kd_sanant, DIRECT);
 
 void setup() {
   Serial.begin(9600);
@@ -64,6 +67,7 @@ void setup() {
   // Turn the PID loop on
   pid_linear.SetMode(AUTOMATIC);
   pid_angular.SetMode(AUTOMATIC);
+  pid_dist_wall.SetMode(AUTOMATIC);
 }
 
 void loop() {
