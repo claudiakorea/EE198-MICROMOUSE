@@ -31,21 +31,24 @@ double velocity_linear_setpoint = 400;
 double velocity_angular_setpoint = 0;
 
 // Wall distance setpoint
-double dist_wall_setpoint = 19;
+double dist_wall_setpoint = 16;
+double dist_wall_output = 0;
 
 // DiFfErENTtiAL EQuatIoNs
 double kp_angular = 0.4;
 double kp_linear = 0.004;
-double kp_anant = 0.2;
+double kp_anant = 0.09;
 
 // Integral
 double ki_angular = 0.05;
 double ki_linear = 0.0005;
-double ki_sahai = 0.005;
+double ki_sahai = 0.00;
 
 // Derivative
 double kd = 0.00005;
 double kd_sanant = 0.0000000001;
+
+double actual_left_dist = 0;
 
 // straight line controllers
 PID pid_linear(&velocity_linear, &velocity_linear_power, &velocity_linear_setpoint, kp_linear, ki_linear, kd, DIRECT);
@@ -83,10 +86,19 @@ void loop() {
   // Your changes should start here //
   ////////////////////////////////////
 
-  
+  // halve distance left_dist * cos(30 deg)
+  left_dist = left_dist * 0.866;
+  actual_left_dist = left_dist;
 
   pid_linear.Compute();
-  pid_dist_wall.Compute();
+  if (left_dist - dist_wall_setpoint > 0) {
+    left_dist = dist_wall_setpoint - (left_dist - dist_wall_setpoint);
+    pid_dist_wall.Compute();
+    velocity_angular_setpoint = 0 - abs(velocity_angular_setpoint);
+  } else {
+    pid_dist_wall.Compute();
+    velocity_angular_setpoint = abs(velocity_angular_setpoint);
+  }
   pid_angular.Compute();
  
   // float left_power = 0.2;
@@ -109,10 +121,10 @@ void loop() {
  //   Serial.print(" ");
 //    Serial.print(velocity_angular);
 //    Serial.print(" ");
-    Serial.print(left_dist);
+    Serial.print(actual_left_dist);
     Serial.print(" ");
     Serial.print(velocity_angular_setpoint);
-//    Serial.print(" ");
+//    Serial.print(" ");o
 //    Serial.print(right_dist);
 //      Serial.print(" ");
 //      Serial.print(ang_error);
