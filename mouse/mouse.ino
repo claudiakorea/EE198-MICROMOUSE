@@ -31,17 +31,17 @@ double velocity_linear_setpoint = 400;
 double velocity_angular_setpoint = 0;
 
 // Wall distance setpoint
-double dist_wall_setpoint = 50;
+double dist_wall_setpoint = 15;
 
 // DiFfErENTtiAL EQuatIoNs
 double kp_angular = 0.4;
 double kp_linear = 0.004;
-double kp_anant = 0.4;
+double kp_anant = 0.6;
 
 // Integral
 double ki_angular = 0.05;
 double ki_linear = 0.0005;
-double ki_sahai = 0.08;
+double ki_sahai = 0.005;
 
 // Derivative
 double kd = 0.00005;
@@ -52,7 +52,7 @@ PID pid_linear(&velocity_linear, &velocity_linear_power, &velocity_linear_setpoi
 PID pid_angular(&velocity_angular, &velocity_angular_power, &velocity_angular_setpoint, kp_angular, ki_angular, kd, DIRECT);
 
 // wall following controllers
-PID pid_dist_wall(&left_dist, &velocity_angular_power, &dist_wall_setpoint, kp_anant, ki_sahai, kd_sanant, DIRECT);
+PID pid_dist_wall(&left_dist, &velocity_angular_setpoint, &dist_wall_setpoint, kp_anant, ki_sahai, kd_sanant, DIRECT);
 
 void setup() {
   Serial.begin(9600);
@@ -86,9 +86,9 @@ void loop() {
   
 
   pid_linear.Compute();
-  pid_angular.Compute();
   pid_dist_wall.Compute();
-
+  pid_angular.Compute();
+ 
   // float left_power = 0.2;
   // float right_power = 0.2;
 
@@ -105,11 +105,11 @@ void loop() {
 
   // Print debug info every 500 loops
   if (count % 500 == 0) {
-    Serial.print(velocity_linear / 100.0);
-    Serial.print(" ");
-    Serial.print(velocity_angular);
+//    Serial.print(velocity_linear / 100.0);
+ //   Serial.print(" ");
+//    Serial.print(velocity_angular);
 //    Serial.print(" ");
-//    Serial.print(left_dist);
+    Serial.print(left_dist);
 //    Serial.print(" ");
 //    Serial.print(center_dist);
 //    Serial.print(" ");
