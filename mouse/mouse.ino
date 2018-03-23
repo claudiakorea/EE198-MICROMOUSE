@@ -31,12 +31,12 @@ double velocity_linear_setpoint = 400;
 double velocity_angular_setpoint = 0;
 
 // Wall distance setpoint
-double dist_wall_setpoint = 15;
+double dist_wall_setpoint = 19;
 
 // DiFfErENTtiAL EQuatIoNs
 double kp_angular = 0.4;
 double kp_linear = 0.004;
-double kp_anant = 0.6;
+double kp_anant = 0.2;
 
 // Integral
 double ki_angular = 0.05;
@@ -110,8 +110,8 @@ void loop() {
 //    Serial.print(velocity_angular);
 //    Serial.print(" ");
     Serial.print(left_dist);
-//    Serial.print(" ");
-//    Serial.print(center_dist);
+    Serial.print(" ");
+    Serial.print(velocity_angular_setpoint);
 //    Serial.print(" ");
 //    Serial.print(right_dist);
 //      Serial.print(" ");
