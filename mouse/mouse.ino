@@ -31,22 +31,22 @@ double velocity_linear_setpoint = 400;
 double velocity_angular_setpoint = 0;
 
 // Wall distance setpoint
-double dist_wall_setpoint = 16;
+double dist_wall_setpoint = 19;
 double dist_wall_output = 0;
 
 // DiFfErENTtiAL EQuatIoNs
 double kp_angular = 0.4;
 double kp_linear = 0.004;
-double kp_anant = 0.09;
+double kp_anant = 0.06;
 
 // Integral
 double ki_angular = 0.05;
 double ki_linear = 0.0005;
-double ki_sahai = 0.00;
+double ki_sahai = 0.003;
 
 // Derivative
 double kd = 0.00005;
-double kd_sanant = 0.0000000001;
+double kd_sanant = 0.005;
 
 double actual_left_dist = 0;
 
@@ -74,6 +74,10 @@ void setup() {
 }
 
 void loop() {
+  while (millis() < 500) {
+    applyPowerLeft(0.2);
+    applyPowerRight(0.2);
+  }
   // Read sensor data
   left_dist = getDistanceLeft();
   right_dist = getDistanceRight();
@@ -88,7 +92,6 @@ void loop() {
 
   // halve distance left_dist * cos(30 deg)
   left_dist = left_dist * 0.866;
-  actual_left_dist = left_dist;
 
   pid_linear.Compute();
   if (left_dist - dist_wall_setpoint > 0) {
@@ -121,7 +124,7 @@ void loop() {
  //   Serial.print(" ");
 //    Serial.print(velocity_angular);
 //    Serial.print(" ");
-    Serial.print(actual_left_dist);
+    Serial.print(left_dist);
     Serial.print(" ");
     Serial.print(velocity_angular_setpoint);
 //    Serial.print(" ");o
