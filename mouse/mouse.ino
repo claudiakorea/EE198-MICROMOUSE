@@ -28,6 +28,8 @@ double velocity_angular_power;
 
 // Angular and Linear setpoints
 double velocity_linear_setpoint = 400;
+double velocity_angular_setpoint_left = 0;
+double velocity_angular_setpoint_right = 0;
 double velocity_angular_setpoint = 0;
 
 // Wall distance setpoint
@@ -53,8 +55,8 @@ PID pid_linear(&velocity_linear, &velocity_linear_power, &velocity_linear_setpoi
 PID pid_angular(&velocity_angular, &velocity_angular_power, &velocity_angular_setpoint, kp_angular, ki_angular, kd, DIRECT);
 
 // wall following controllers
-PID pid_dist_left(&left_dist, &velocity_angular_setpoint, &dist_wall_setpoint, kp_anant, ki_sahai, kd_sanant, DIRECT);
-PID pid_dist_right(&right_dist, &velocity_angular_setpoint, &dist_wall_setpoint, kp_anant, ki_sahai, kd_sanant, DIRECT);
+PID pid_dist_left(&left_dist, &velocity_angular_setpoint_left, &dist_wall_setpoint, kp_anant, ki_sahai, kd_sanant, DIRECT);
+PID pid_dist_right(&right_dist, &velocity_angular_setpoint_right, &dist_wall_setpoint, kp_anant, ki_sahai, kd_sanant, DIRECT);
 
 void setup() {
   Serial.begin(9600);
@@ -92,26 +94,28 @@ void loop() {
 
   // halve distance left_dist * cos(30 deg)
   left_dist = left_dist * 0.866;
-  right_dist = right_dist * 0.866
+  right_dist = right_dist * 0.866;
 
   pid_linear.Compute();
   if (left_dist - dist_wall_setpoint > 0) {
     left_dist = dist_wall_setpoint - (left_dist - dist_wall_setpoint);
-    pid_dist_wall.Compute();
-    velocity_angular_setpoint = 0 - abs(velocity_angular_setpoint);
+    pid_dist_left.Compute();
+    velocity_angular_setpoint_left = 0 - abs(velocity_angular_setpoint_left);
   } else {
-    pid_dist_wall.Compute();
-    velocity_angular_setpoint = abs(velocity_angular_setpoint);
+    pid_dist_left.Compute();
+    velocity_angular_setpoint_left = abs(velocity_angular_setpoint_left);
   }
 
   if (right_dist - dist_wall_setpoint > 0) {
-    left_dist = dist_wall_setpoint - (left_dist - dist_wall_setpoint);
-    pid_dist_wall.Compute();
-    velocity_angular_setpoint = 0 - abs(velocity_angular_setpoint);
+    right_dist = dist_wall_setpoint - (right_dist - dist_wall_setpoint);
+    pid_dist_right.Compute();
+    velocity_angular_setpoint_right = abs(velocity_angular_setpoint_right);
   } else {
-    pid_dist_wall.Compute();
-    velocity_angular_setpoint = abs(velocity_angular_setpoint);
+    pid_dist_right.Compute();
+    velocity_angular_setpoint_right = 0 -  abs(velocity_angular_setpoint_right);
   }
+  
+  velocity_angular_setpoint = (velocity_angular_setpoint_left + velocity_angular_setpoint_right) / 2;
   pid_angular.Compute();
  
   // float left_power = 0.2;
