@@ -19,8 +19,8 @@ int count = 0;
 double velocity_angular = 0;
 double velocity_linear = 0;
 double left_dist;
-float right_dist;
-float center_dist;
+double right_dist;
+double center_dist;
 
 // Power variables to apply
 double velocity_linear_power;
@@ -48,14 +48,13 @@ double ki_sahai = 0.003;
 double kd = 0.00005;
 double kd_sanant = 0.005;
 
-double actual_left_dist = 0;
-
 // straight line controllers
 PID pid_linear(&velocity_linear, &velocity_linear_power, &velocity_linear_setpoint, kp_linear, ki_linear, kd, DIRECT);
 PID pid_angular(&velocity_angular, &velocity_angular_power, &velocity_angular_setpoint, kp_angular, ki_angular, kd, DIRECT);
 
 // wall following controllers
-PID pid_dist_wall(&left_dist, &velocity_angular_setpoint, &dist_wall_setpoint, kp_anant, ki_sahai, kd_sanant, DIRECT);
+PID pid_dist_left(&left_dist, &velocity_angular_setpoint, &dist_wall_setpoint, kp_anant, ki_sahai, kd_sanant, DIRECT);
+PID pid_dist_right(&right_dist, &velocity_angular_setpoint, &dist_wall_setpoint, kp_anant, ki_sahai, kd_sanant, DIRECT);
 
 void setup() {
   Serial.begin(9600);
@@ -70,7 +69,8 @@ void setup() {
   // Turn the PID loop on
   pid_linear.SetMode(AUTOMATIC);
   pid_angular.SetMode(AUTOMATIC);
-  pid_dist_wall.SetMode(AUTOMATIC);
+  pid_dist_left.SetMode(AUTOMATIC);
+  pid_dist_right.SetMode(AUTOMATIC);
 }
 
 void loop() {
@@ -92,9 +92,19 @@ void loop() {
 
   // halve distance left_dist * cos(30 deg)
   left_dist = left_dist * 0.866;
+  right_dist = right_dist * 0.866
 
   pid_linear.Compute();
   if (left_dist - dist_wall_setpoint > 0) {
+    left_dist = dist_wall_setpoint - (left_dist - dist_wall_setpoint);
+    pid_dist_wall.Compute();
+    velocity_angular_setpoint = 0 - abs(velocity_angular_setpoint);
+  } else {
+    pid_dist_wall.Compute();
+    velocity_angular_setpoint = abs(velocity_angular_setpoint);
+  }
+
+  if (right_dist - dist_wall_setpoint > 0) {
     left_dist = dist_wall_setpoint - (left_dist - dist_wall_setpoint);
     pid_dist_wall.Compute();
     velocity_angular_setpoint = 0 - abs(velocity_angular_setpoint);
@@ -127,7 +137,7 @@ void loop() {
     Serial.print(left_dist);
     Serial.print(" ");
     Serial.print(velocity_angular_setpoint);
-//    Serial.print(" ");o
+//    Serial.print(" ");
 //    Serial.print(right_dist);
 //      Serial.print(" ");
 //      Serial.print(ang_error);
