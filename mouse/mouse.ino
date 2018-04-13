@@ -33,13 +33,18 @@ double velocity_angular_setpoint_right = 0;
 double velocity_angular_setpoint = 0;
 
 // Wall distance setpoint
-double dist_wall_setpoint = 19;
+double dist_wall_setpoint = 15;
 double dist_wall_output = 0;
+double dist_wall_stop = 20;
 
-// DiFfErENTtiAL EQuatIoNs
+// Constants
+double max_dist = 17.90 / 0.866; // hard coded (17.92)
+String prev_wall = "none";
+
+// DiFfErENTtiAL EQuatIoNs  (Proportional)
 double kp_angular = 0.4;
 double kp_linear = 0.004;
-double kp_anant = 0.06;
+double kp_anant = 0.10;
 
 // Integral
 double ki_angular = 0.05;
@@ -49,6 +54,9 @@ double ki_sahai = 0.003;
 // Derivative
 double kd = 0.00005;
 double kd_sanant = 0.005;
+
+// State ("drive", "stop", "left_wall", "right_wall")
+String state = "drive";
 
 // straight line controllers
 PID pid_linear(&velocity_linear, &velocity_linear_power, &velocity_linear_setpoint, kp_linear, ki_linear, kd, DIRECT);
@@ -92,45 +100,104 @@ void loop() {
   // Your changes should start here //
   ////////////////////////////////////
 
-  // halve distance left_dist * cos(30 deg)
-  left_dist = left_dist * 0.866;
-  right_dist = right_dist * 0.866;
-
-  pid_linear.Compute();
-  if (left_dist - dist_wall_setpoint > 0) {
-    left_dist = dist_wall_setpoint - (left_dist - dist_wall_setpoint);
-    pid_dist_left.Compute();
-    velocity_angular_setpoint_left = 0 - abs(velocity_angular_setpoint_left);
+  if (left_dist > max_dist && right_dist > max_dist) {
+    if (prev_wall.equals("none")) {
+      state = "drive";
+    } else {
+      state = prev_wall;
+    }
+  } else if (left_dist > max_dist) {
+    prev_wall = "right_wall";
+    state = prev_wall;
+  } else if (right_dist > max_dist) {
+    prev_wall = "left_wall";
+    state = prev_wall;
   } else {
-    pid_dist_left.Compute();
-    velocity_angular_setpoint_left = abs(velocity_angular_setpoint_left);
+    state = "drive";
   }
 
-  if (right_dist - dist_wall_setpoint > 0) {
-    right_dist = dist_wall_setpoint - (right_dist - dist_wall_setpoint);
-    pid_dist_right.Compute();
-    velocity_angular_setpoint_right = abs(velocity_angular_setpoint_right);
-  } else {
-    pid_dist_right.Compute();
-    velocity_angular_setpoint_right = 0 -  abs(velocity_angular_setpoint_right);
+  // check if middle distance is too small, if so, then stop
+  if (center_dist < dist_wall_stop) {
+    state = "stop";
+  }
+
+  if (state.equals("left_wall")) {
+    left_dist = left_dist * 0.866 * 0.866;
+    pid_linear.Compute();
+    if (left_dist - dist_wall_setpoint > 0) {
+      left_dist = dist_wall_setpoint - (left_dist - dist_wall_setpoint);
+      pid_dist_left.Compute();
+      velocity_angular_setpoint_left = 0 - abs(velocity_angular_setpoint_left);
+    } else {
+      pid_dist_left.Compute();
+      velocity_angular_setpoint_left = abs(velocity_angular_setpoint_left);
+    }
+    velocity_angular_setpoint = velocity_angular_setpoint_left;
+    pid_angular.Compute();
+    applyPowerLeft(velocity_linear_power - velocity_angular_power);
+    applyPowerRight(velocity_linear_power + velocity_angular_power);
+  } else if (state.equals("right_wall")) {
+    right_dist = right_dist * 0.866 * 0.866;
+    pid_linear.Compute();
+    if (right_dist - dist_wall_setpoint > 0) {
+      right_dist = dist_wall_setpoint - (right_dist - dist_wall_setpoint);
+      pid_dist_right.Compute();
+      velocity_angular_setpoint_right = abs(velocity_angular_setpoint_right);
+    } else {
+      pid_dist_right.Compute();
+      velocity_angular_setpoint_right = 0 -  abs(velocity_angular_setpoint_right);
+    }
+    velocity_angular_setpoint = velocity_angular_setpoint_right;
+    pid_angular.Compute();
+    applyPowerLeft(velocity_linear_power - velocity_angular_power);
+    applyPowerRight(velocity_linear_power + velocity_angular_power);
   }
   
-  velocity_angular_setpoint = (velocity_angular_setpoint_left + velocity_angular_setpoint_right) / 2;
-  pid_angular.Compute();
- 
-  // float left_power = 0.2;
-  // float right_power = 0.2;
-
-  // float ang_error = -1 * velocity_angular;
-  // float ang_u = ang_error * kp;
-
-  // float lin_error = 500 - velocity_linear;
-  // float lin_u = lin_error * k_lin;
-
-  // applyPowerLeft(lin_u - ang_u);
-  // applyPowerRight(lin_u + ang_u);
-  applyPowerLeft(velocity_linear_power - velocity_angular_power);
-  applyPowerRight(velocity_linear_power + velocity_angular_power);
+  // halve distance left_dist * cos(30 deg)
+  if (state.equals("drive")) {
+    left_dist = left_dist * 0.866 * 0.866;
+    right_dist = right_dist * 0.866 * 0.866;
+  
+    pid_linear.Compute();
+    if (left_dist - dist_wall_setpoint > 0) {
+      left_dist = dist_wall_setpoint - (left_dist - dist_wall_setpoint);
+      pid_dist_left.Compute();
+      velocity_angular_setpoint_left = 0 - abs(velocity_angular_setpoint_left);
+    } else {
+      pid_dist_left.Compute();
+      velocity_angular_setpoint_left = abs(velocity_angular_setpoint_left);
+    }
+  
+    if (right_dist - dist_wall_setpoint > 0) {
+      right_dist = dist_wall_setpoint - (right_dist - dist_wall_setpoint);
+      pid_dist_right.Compute();
+      velocity_angular_setpoint_right = abs(velocity_angular_setpoint_right);
+    } else {
+      pid_dist_right.Compute();
+      velocity_angular_setpoint_right = 0 -  abs(velocity_angular_setpoint_right);
+    }
+    
+    velocity_angular_setpoint = (velocity_angular_setpoint_left + velocity_angular_setpoint_right) / 2;
+    pid_angular.Compute();
+   
+    // float left_power = 0.2;
+    // float right_power = 0.2;
+  
+    // float ang_error = -1 * velocity_angular;
+    // float ang_u = ang_error * kp;
+  
+    // float lin_error = 500 - velocity_linear;
+    // float lin_u = lin_error * k_lin;
+  
+    // applyPowerLeft(lin_u - ang_u);
+    // applyPowerRight(lin_u + ang_u);
+    applyPowerLeft(velocity_linear_power - velocity_angular_power);
+    applyPowerRight(velocity_linear_power + velocity_angular_power);
+    
+  } else if (state.equals("stop")) {
+    applyPowerLeft(0);
+    applyPowerRight(0);
+  }
 
   // Print debug info every 500 loops
   if (count % 500 == 0) {
@@ -140,12 +207,16 @@ void loop() {
 //    Serial.print(" ");
     Serial.print(left_dist);
     Serial.print(" ");
+    Serial.print(right_dist);
+    Serial.print(" ");
     Serial.print(velocity_angular_setpoint);
+    Serial.print(" ");
+    Serial.print(state);
 //    Serial.print(" ");
 //    Serial.print(right_dist);
 //      Serial.print(" ");
 //      Serial.print(ang_error);
-      Serial.println();
+    Serial.println();
   }
   count++;
 
