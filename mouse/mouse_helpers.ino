@@ -98,6 +98,35 @@ void applyBrakeRight(float power) {
   analogWrite(PIN_MOTOR_RIGHT_2, constrain(power * 255.0, 0, 255));
 }
 
+void backUpABit() {
+  unsigned long startTime = millis();
+  while (millis() - startTime < 20) {
+    applyPowerLeft(-0.2);
+    applyPowerRight(-0.2);
+  }
+}
+
+void brake() {
+  applyBrakeLeft(1);
+  applyBrakeRight(1);
+}
+
+void rotateLeft() {
+  unsigned long startTime = millis();
+  while (millis() - startTime < 275) {
+    applyPowerLeft(-0.2);
+    applyPowerRight(0.2);
+  }
+}
+
+void rotateRight() {
+  unsigned long startTime = millis();
+  while (millis() - startTime < 275) {
+    applyPowerLeft(0.2);
+    applyPowerRight(-0.2);
+  }
+}
+
 //////////////////////////////
 // Encoder helper functions //
 //////////////////////////////

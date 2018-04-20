@@ -15,6 +15,9 @@ const boolean INVERT_MOTOR_RIGHT = true;
 // Loop count, used for print statements
 int count = 0;
 
+// Time constants
+unsigned long stopTime = 0;
+
 // Sensor states
 double velocity_angular = 0;
 double velocity_linear = 0;
@@ -27,24 +30,24 @@ double velocity_linear_power;
 double velocity_angular_power;
 
 // Angular and Linear setpoints
-double velocity_linear_setpoint = 400;
+double velocity_linear_setpoint = 315;
 double velocity_angular_setpoint_left = 0;
 double velocity_angular_setpoint_right = 0;
 double velocity_angular_setpoint = 0;
 
 // Wall distance setpoint
-double dist_wall_setpoint = 15;
+double dist_wall_setpoint = 20;
 double dist_wall_output = 0;
-double dist_wall_stop = 20;
+double dist_wall_stop = 11.5;
 
 // Constants
-double max_dist = 17.90 / 0.866; // hard coded (17.92)
+double max_dist = 17.90 / 0.866; // hard coded (when multiplied by 0.866, we get 17.92 max)
 String prev_wall = "none";
 
 // DiFfErENTtiAL EQuatIoNs  (Proportional)
 double kp_angular = 0.4;
 double kp_linear = 0.004;
-double kp_anant = 0.10;
+double kp_anant = 0.06;
 
 // Integral
 double ki_angular = 0.05;
@@ -55,7 +58,7 @@ double ki_sahai = 0.003;
 double kd = 0.00005;
 double kd_sanant = 0.005;
 
-// State ("drive", "stop", "left_wall", "right_wall")
+// State ("drive", "stop", "left_wall", "right_wall", "turn_left", "turn_right", "turn_right")
 String state = "drive";
 
 // straight line controllers
@@ -84,10 +87,10 @@ void setup() {
 }
 
 void loop() {
-  while (millis() < 500) {
-    applyPowerLeft(0.2);
-    applyPowerRight(0.2);
-  }
+//  while (millis() < 500) {
+//    applyPowerLeft(0.2);
+//    applyPowerRight(0.2);
+//  }
   // Read sensor data
   left_dist = getDistanceLeft();
   right_dist = getDistanceRight();
@@ -112,17 +115,21 @@ void loop() {
   } else if (right_dist > max_dist) {
     prev_wall = "left_wall";
     state = prev_wall;
-  } else {
+  } else if (center_dist < dist_wall_stop) {
+    if (!state.equals("stop")) {
+      stopTime = millis();
+    }
+    state = "stop";
+  }
+  else {
     state = "drive";
   }
 
   // check if middle distance is too small, if so, then stop
-  if (center_dist < dist_wall_stop) {
-    state = "stop";
-  }
+
 
   if (state.equals("left_wall")) {
-    left_dist = left_dist * 0.866 * 0.866;
+    left_dist = left_dist * 0.866;
     pid_linear.Compute();
     if (left_dist - dist_wall_setpoint > 0) {
       left_dist = dist_wall_setpoint - (left_dist - dist_wall_setpoint);
@@ -136,11 +143,12 @@ void loop() {
     pid_angular.Compute();
     applyPowerLeft(velocity_linear_power - velocity_angular_power);
     applyPowerRight(velocity_linear_power + velocity_angular_power);
+    
   } else if (state.equals("right_wall")) {
-    right_dist = right_dist * 0.866 * 0.866;
+    right_dist = right_dist * 0.866;
     pid_linear.Compute();
     if (right_dist - dist_wall_setpoint > 0) {
-      right_dist = dist_wall_setpoint - (right_dist - dist_wall_setpoint);
+      right_dist = dist_wall_setpoint - (right_dist - dist_wall_setpoint) - 9; // <----- manual offset
       pid_dist_right.Compute();
       velocity_angular_setpoint_right = abs(velocity_angular_setpoint_right);
     } else {
@@ -153,14 +161,14 @@ void loop() {
     applyPowerRight(velocity_linear_power + velocity_angular_power);
   }
   
-  // halve distance left_dist * cos(30 deg)
+
   if (state.equals("drive")) {
-    left_dist = left_dist * 0.866 * 0.866;
-    right_dist = right_dist * 0.866 * 0.866;
+    left_dist = left_dist * 0.866;
+    right_dist = right_dist * 0.866;
   
     pid_linear.Compute();
     if (left_dist - dist_wall_setpoint > 0) {
-      left_dist = dist_wall_setpoint - (left_dist - dist_wall_setpoint);
+      left_dist = dist_wall_setpoint - (left_dist - dist_wall_setpoint) - 8; // <---- another manual offsett
       pid_dist_left.Compute();
       velocity_angular_setpoint_left = 0 - abs(velocity_angular_setpoint_left);
     } else {
@@ -195,8 +203,29 @@ void loop() {
     applyPowerRight(velocity_linear_power + velocity_angular_power);
     
   } else if (state.equals("stop")) {
+    brake();
     applyPowerLeft(0);
     applyPowerRight(0);
+    Serial.print("stopTime: ");
+    Serial.print(stopTime);
+    Serial.print("millis(): ");
+    Serial.println(millis());
+    if (millis() - stopTime > 220) { // if stopped for one second, turn right
+      if (prev_wall.equals("left_wall")) {
+        state = "turn_right";
+      } else {
+        state = "turn_left";
+      }
+    }
+  } 
+  if (state.equals("turn_right")) {
+    unsigned long startTime = millis();
+    backUpABit();
+    rotateLeft();
+  } else if (state.equals("turn_left")) {
+    unsigned long startTime = millis();
+    backUpABit();
+    rotateRight();
   }
 
   // Print debug info every 500 loops
