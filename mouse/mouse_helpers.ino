@@ -98,9 +98,17 @@ void applyBrakeRight(float power) {
   analogWrite(PIN_MOTOR_RIGHT_2, constrain(power * 255.0, 0, 255));
 }
 
+void backUp() {
+  unsigned long startTime = millis();
+  while (millis() - startTime < 50) {
+    applyPowerLeft(-0.2);
+    applyPowerRight(-0.2);
+  }
+}
+
 void backUpABit() {
   unsigned long startTime = millis();
-  while (millis() - startTime < 20) {
+  while (millis() - startTime < 15) {
     applyPowerLeft(-0.2);
     applyPowerRight(-0.2);
   }
@@ -113,17 +121,43 @@ void brake() {
 
 void rotateLeft() {
   unsigned long startTime = millis();
-  while (millis() - startTime < 275) {
+  while (millis() - startTime < 281) {
     applyPowerLeft(-0.2);
     applyPowerRight(0.2);
+    left_dist = getDistanceLeft();
+    right_dist = getDistanceRight();
+    if (abs(left_dist - right_dist) < 0.45) {
+      return;
+    }
   }
 }
 
 void rotateRight() {
   unsigned long startTime = millis();
-  while (millis() - startTime < 275) {
+  while (millis() - startTime < 281) {
     applyPowerLeft(0.2);
     applyPowerRight(-0.2);
+    left_dist = getDistanceLeft();
+    right_dist = getDistanceRight();
+    if (abs(left_dist - right_dist) < 0.45) {
+      return;
+    }
+  }
+}
+
+void setLED() {
+  if (state.equals("stop")) {
+    digitalWrite(PIN_LED1, LOW);
+    digitalWrite(PIN_LED2, LOW);
+  } else if (state.equals("left_wall")) {
+    digitalWrite(PIN_LED1, HIGH);
+    digitalWrite(PIN_LED2, LOW);
+  } else if (state.equals("right_wall")) {
+    digitalWrite(PIN_LED1, LOW);
+    digitalWrite(PIN_LED2, HIGH);
+  } else if (state.equals("drive")) {
+    digitalWrite(PIN_LED1, HIGH);
+    digitalWrite(PIN_LED2, HIGH);
   }
 }
 

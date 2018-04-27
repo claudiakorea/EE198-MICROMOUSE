@@ -30,24 +30,27 @@ double velocity_linear_power;
 double velocity_angular_power;
 
 // Angular and Linear setpoints
-double velocity_linear_setpoint = 315;
+double velocity_linear_setpoint = 250;
 double velocity_angular_setpoint_left = 0;
 double velocity_angular_setpoint_right = 0;
 double velocity_angular_setpoint = 0;
 
 // Wall distance setpoint
-double dist_wall_setpoint = 20;
+double dist_wall_setpoint = 18.6;
 double dist_wall_output = 0;
-double dist_wall_stop = 11.5;
+double dist_wall_stop = 10;
+
+double factor = 1.0;
 
 // Constants
 double max_dist = 17.90 / 0.866; // hard coded (when multiplied by 0.866, we get 17.92 max)
 String prev_wall = "none";
+int prev_wall_light = 0;
 
 // DiFfErENTtiAL EQuatIoNs  (Proportional)
-double kp_angular = 0.4;
+double kp_angular = 0.5;
 double kp_linear = 0.004;
-double kp_anant = 0.06;
+double kp_anant = 0.08;
 
 // Integral
 double ki_angular = 0.05;
@@ -120,10 +123,17 @@ void loop() {
       stopTime = millis();
     }
     state = "stop";
+//    if (left_dist > right_dist) {
+//      factor = right_dist / left_dist;
+//    } else {
+//      factor = left_dist / right_dist;
+//    }
   }
   else {
     state = "drive";
   }
+  setLED();
+  
 
   // check if middle distance is too small, if so, then stop
 
@@ -204,18 +214,15 @@ void loop() {
     
   } else if (state.equals("stop")) {
     brake();
-    applyPowerLeft(0);
-    applyPowerRight(0);
-    Serial.print("stopTime: ");
-    Serial.print(stopTime);
-    Serial.print("millis(): ");
-    Serial.println(millis());
     if (millis() - stopTime > 220) { // if stopped for one second, turn right
       if (prev_wall.equals("left_wall")) {
         state = "turn_right";
       } else {
         state = "turn_left";
       }
+    }
+    if (left_dist < 5 && right_dist < 5 && center_dist < 2) {
+      backUp();
     }
   } 
   if (state.equals("turn_right")) {
