@@ -30,7 +30,7 @@ double velocity_linear_power;
 double velocity_angular_power;
 
 // Angular and Linear setpoints
-double velocity_linear_setpoint = 250;
+double velocity_linear_setpoint = 350;
 double velocity_angular_setpoint_left = 0;
 double velocity_angular_setpoint_right = 0;
 double velocity_angular_setpoint = 0;
@@ -38,7 +38,7 @@ double velocity_angular_setpoint = 0;
 // Wall distance setpoint
 double dist_wall_setpoint = 18.6;
 double dist_wall_output = 0;
-double dist_wall_stop = 10;
+double dist_wall_stop = 12;
 
 double factor = 1.0;
 
